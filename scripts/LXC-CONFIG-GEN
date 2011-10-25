@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# determine location of LXC templates
+if test -d /usr/lib64/lxc/templates;then
+   LXC_TEMPLATES=/usr/lib64/lxc/templates
+elif test -d /usr/lib/lxc/templates;then
+   LXC_TEMPLATES=/usr/lib/lxc/templates
+else
+   echo "${0}: unable to determine LXC template directory" 1>&2
+   exit 1
+fi
+
+
+# determine location of LXC caches
+if test -d /var/cache/lxc/;then
+   LXC_CACHE=/var/cache/lxc/slackware
+else
+   echo "${0}: unable to determine LXC cache directory" 1>&2
+   exit 1
+fi
+
+
+rm -f LXC-CONFIG-FILE
+cat << EOF > LXC-CONFIG-FILE
+LXC_TEMPLATES = ${LXC_TEMPLATES}
+LXC_CACHE = ${LXC_CACHE}
+EOF
+
+# end of script
