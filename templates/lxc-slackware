@@ -25,8 +25,6 @@
 
 SUITE=${SUITE:-13.37}
 cache=${cache:-/var/cache/lxc/slackware}
-# let's use a secondary mirror to avoid loading the primary
-MIRROR=${MIRROR:-http://www.slackware.at/data}
 
 if [ -z "$arch" ]; then
 case "$( uname -m )" in
@@ -35,6 +33,18 @@ case "$( uname -m )" in
        *) arch=$( uname -m ) ;;
 esac
 fi
+
+# let's use a secondary mirror to avoid loading the primary
+if test -f /etc/slackpkg/mirrors;then
+	SYSTEMMIRROR=`cut -d# -f1 /etc/slackpkg/mirrors |egrep -v '^[[:space:]]{0,}$' |head -1`
+	MIRROR=${MIRROR:-${SYSTEMMIRROR}}
+fi
+subarch=
+if [ "$arch" == "x86_64" ]; then
+        subarch=64
+fi
+MIRROR=${MIRROR:-http://www.slackware.at/data/slackware$subarch-$SUITE}
+
 
 configure_slackware()
 {
@@ -84,6 +94,14 @@ cat <<EOF > $rootfs/etc/HOSTNAME
 $hostname.example.net
 EOF
 cp $rootfs/etc/HOSTNAME $rootfs/etc/hostname
+
+
+# add slackpkg mirrors
+echo "${MIRROR}" >> $rootfs/etc/slackpkg/mirrors
+
+# copy host localtime to container
+rm -f $rootfs/etc/localtime
+cp /etc/localtime $rootfs/etc/localtime
 
 # make needed devices, from Chris Willing's MAKEDEV.sh
 # http://www.vislab.uq.edu.au/howto/lxc/MAKEDEV.sh
@@ -465,9 +483,11 @@ a/sysvinit-functions-8.53-$arch-2.txz \
 a/sysvinit-scripts-1.2-noarch-43.txz \
 a/tar-1.26-$arch-1.tgz \
 a/udev-165-$arch-2.txz \
+a/less-443-$arch-1.txz \
 a/util-linux-2.19-$arch-1.txz \
 n/wget-1.12-$arch-1.txz \
 a/which-2.20-$arch-1.txz \
+l/ncurses-5.9-$arch-1.txz \
 a/xz-5.0.2-$arch-1.tgz"}
 
 # check if the slackware packages are already downloaded
@@ -482,7 +502,7 @@ echo "Downloading some slackware minimal packages..."
 (
 cd $cache/partial-$SUITE-$arch
 for package in $PACKAGES; do
-	wget -nv -c $MIRROR/slackware$subarch-$SUITE/slackware$subarch/$package
+	wget -nv -c $MIRROR/slackware$subarch/$package
 done
 )
 
