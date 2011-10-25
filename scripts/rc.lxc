@@ -42,6 +42,31 @@ stop() {
 }
 
 
+# Function to install rc script
+install_rc() {
+   grep /etc/rc.d/rc.lxc /etc/rc.d/rc.local > /dev/null 2>&1
+   if test $? -ne 0;then
+cat << EOF >> /etc/rc.d/rc.local
+
+# start LXC containers
+if test -x /etc/rc.d/rc.lxc;then
+   /etc/rc.d/rc.lxc start
+fi
+EOF
+   fi
+   grep /etc/rc.d/rc.lxc /etc/rc.d/rc.local_shutdown > /dev/null 2>&1
+   if test $? -ne 0;then
+cat << EOF >> /etc/rc.d/rc.local_shutdown
+
+# stop LXC containers
+if test -x /etc/rc.d/rc.lxc;then
+   /etc/rc.d/rc.lxc stop
+fi
+EOF
+      chmod 755 /etc/rc.d/rc.local_shutdown
+   fi
+}
+
 ############
 ### MAIN ###
 ############
@@ -58,6 +83,10 @@ case "$1" in
    'restart') # "restart" restarts the network:
       stop
       start
+   ;;
+
+   'install-rc')
+      install_rc
    ;;
 
    *) # The default is to bring up all configured interfaces:

@@ -46,6 +46,7 @@ $(LXC_TEMPLATES)/lxc-slackware: templates/lxc-slackware
 	@echo "installing /etc/rc.d/rc.lxc..."
 	@cp scripts/rc.lxc /etc/rc.d/rc.lxc
 	@chmod 755 /etc/rc.d/rc.lxc
+	@/etc/rc.d/rc.lxc install-rc
 	
 /etc/rc.d/rc.lxc.conf:
 	@echo "installing /etc/rc.d/rc.lxc.conf..."
