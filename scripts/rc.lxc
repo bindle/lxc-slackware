@@ -1,0 +1,68 @@
+#! /bin/sh
+# /etc/rc.d/rc.inet1
+# This script is used to bring up the various network interfaces.
+#
+# @(#)/etc/rc.d/rc.inet1 10.2  Sun Jul 24 12:45:56 PDT 2005  (pjv)
+
+###########
+# LOGGING #
+###########
+
+# If possible, log events in /var/log/messages:
+#if [ -f /var/run/syslogd.pid -a -x /usr/bin/logger ]; then
+#  LOGGER=/usr/bin/logger
+#else # output to stdout/stderr:
+  LOGGER=/bin/cat
+#fi
+
+
+#####################
+# GATEWAY FUNCTIONS #
+#####################
+
+# Function to start the network:
+start() {
+   for NAME in `cut -d# -f1 /etc/rc.d/rc.lxc.conf |sort |uniq`;do
+      if test ! -d /sys/fs/cgroup/${NAME};then
+         echo "/etc/rc.d/rc.lxc:  /usr/bin/lxc-start -d -n ${NAME}" | $LOGGER
+         /usr/bin/lxc-start -d -n ${NAME}
+      fi
+   done
+}
+
+
+# Function to stop the network:
+stop() {
+   for NAME in `lxc-ls |sort |uniq`;do
+      if test -d /sys/fs/cgroup/${NAME};then
+         echo "/etc/rc.d/rc.lxc:  /usr/bin/lxc-stop -n ${NAME}" | $LOGGER
+         /usr/bin/lxc-stop -n ${NAME}
+      fi
+   done
+}
+
+
+############
+### MAIN ###
+############
+
+case "$1" in
+   'start') # "start" brings up all configured interfaces:
+      start
+   ;;
+
+   'stop') # "stop" takes down all configured interfaces:
+      stop
+   ;;
+
+   'restart') # "restart" restarts the network:
+      stop
+      start
+   ;;
+
+   *) # The default is to bring up all configured interfaces:
+     start
+   ;;
+esac
+
+# End of /etc/rc.d/rc.inet1
